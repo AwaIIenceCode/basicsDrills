@@ -17,12 +17,17 @@ let sumWithTips = deposit + sumTips;
 
 let sumInPerson = sumWithTips / numberOfPeople;
 
-if (deposit >= 1000) 
-    {
-        sumInPerson * 0.05;
-    }
-
 console.log(`\nYour deposit -> ${deposit}`);
 console.log(`Your tips -> (${tips}%): ${sumTips} USDT`);
 console.log(`All sum -> ${sumWithTips} USDT`);
-console.log(`In person -> ${sumInPerson}`);
+
+if (deposit >= 1000) 
+    { 
+        let sumWithDiscount = deposit - (deposit * 0.05); 
+        console.log(`In person with discount -> ${(sumWithDiscount + (tips / 100)) / numberOfPeople} USDT`);
+    }
+
+else
+    {
+        console.log(`In person without discount -> ${sumInPerson} USDT`)
+    }
