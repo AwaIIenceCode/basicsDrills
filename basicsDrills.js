@@ -1,33 +1,53 @@
 const prompt = require("prompt-sync")();
+const fmt = (n) => Number(n.toFixed(2)); 
 
-let deposit, tips, numberOfPeople;
+const depositInput = prompt("Enter your USDT deposit: ");
+const deposit = Number(depositInput);
 
-deposit = Number(prompt("Enter your usdt deposit -> "));
-if (isNaN(deposit) ||  deposit <= 0 ) { console.log("Deposit must be positive number!"); process.exit(); }
+if (isNaN(deposit) || deposit <= 0) 
+{
+  console.log("Error: Deposit must be a positive number!");
+  process.exit(1);
+}
 
-tips = Number(prompt("Enter your tips for barmen (0 - 100%) -> "));
-if (isNaN (tips) || tips < 0 || tips > 100) { tips = 10; }
+const tipsInput = prompt("Enter tips percentage (0-100, press Enter for 10%): ").trim();
+const tips = tipsInput === "" ? 10 : Number(tipsInput);
 
-numberOfPeople = Number(prompt("Enter count your friend -> "));
-if (isNaN(numberOfPeople) || numberOfPeople <= 0) { console.log("Count of people must be a positive!"); process.exit(); }
+if (isNaN(tips) || tips < 0 || tips > 100) 
+{
+  console.log("Invalid tips, using default 10%");
+  tips = 10;
+}
 
-let sumTips = deposit * (tips / 100);
+const peopleInput = prompt("Enter number of people: ");
+let people = Number(peopleInput);
 
-let sumWithTips = deposit + sumTips;
+if (isNaN(people) || people < 1) 
+{
+  console.log("Error: Number of people must be at least 1!");
+  process.exit(1);
+}
+people = Math.floor(people);
 
-let sumInPerson = sumWithTips / numberOfPeople;
-
-console.log(`\nYour deposit -> ${deposit}`);
-console.log(`Your tips -> (${tips}%): ${sumTips} USDT`);
-console.log(`All sum -> ${sumWithTips} USDT`);
+const tipsAmount = deposit * (tips / 100);
+let total = deposit + tipsAmount;
+let discount = 0;
 
 if (deposit >= 1000) 
-    { 
-        let sumWithDiscount = deposit - (deposit * 0.05); 
-        console.log(`In person with discount -> ${(sumWithDiscount + (tips / 100)) / numberOfPeople} USDT`);
-    }
+{
+  discount = deposit * 0.05;
+  total = deposit - discount + tipsAmount;  
+}
 
-else
-    {
-        console.log(`In person without discount -> ${sumInPerson} USDT`)
-    }
+const perPerson = total / people;
+
+console.log("\n=== Crypto Bar Bill ===");
+console.log(`Deposit:        ${fmt(deposit)} USDT`);
+console.log(`Tips (          ${tips}%):{fmt(tipsAmount)} USDT`);
+if (discount > 0) 
+{
+  console.log(`Discount (5%):       -${fmt(discount)} USDT`);
+}
+
+console.log(`Total:          ${fmt(total)} USDT`);
+console.log(`Per person:     ${fmt(perPerson)} USDT`);
