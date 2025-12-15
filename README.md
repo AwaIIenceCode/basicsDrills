@@ -33,3 +33,7 @@ Output uses template literals and `toFixed(2)` for clean formatting.
    ```bash
    npm init -y
    npm install prompt-sync
+4. Save the code as index.js
+5. Run the app:Bashnode index.js
+
+Enjoy calculating tips in the crypto bar while mastering JavaScript basics!
