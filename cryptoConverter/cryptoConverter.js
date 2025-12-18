@@ -61,13 +61,16 @@
 
 const prompt = require("prompt-sync")();
 
-console.log("=== Crypto Converter (Buy Mode) ===\n");
-const userCommand = Number(prompt("Write \"1\" if you want to buy cryptocurrency\nWrite \"2\"if you want to sell cryptocurrency\nWrite \"3\" for exit the program -> "));
+//console.log("=== Crypto Converter (Buy Mode) ===\n");
+const userCommand = Number(prompt("Write \"1\" if you want to buy BTC\nWrite \"2\"if you want to sell cryptocurrency\n"));
+console.log("Write \"3\" for check your balance\nWrite \"4\" for exit the program -> ");
 
 let userDeposit = 0; //депозит юзера
-let exchangeRate = 0; //курс крипты
+let BTCRate = 0; //курс крипты
 let exchangeFee = 0; //комиссия биржы
+let userCoinBalance = 0; //к-во монет юзера
 let valueIncomeTax = 0; //налог на прибыль
+let feeAmount = 0; //размер комисии
 
 while(true)
 {
@@ -75,16 +78,54 @@ while(true)
     {
         case 1:
             {
+                console.log("=== Crypto Converter (Buy Mode) ===\n");
+                userDeposit = Number(prompt("Enter your USDT deposit -> "));
+                BTCRate = Number(prompt("Enter your currency rate -> "));
+                exchangeFee = Number(prompt("Enter your commission exchange in \"%!\"-> "));
 
+                if (userDeposit <= 0 || exchangeRate <= 0) 
+                {
+                    console.log("Cannot be 0 or negative!");
+                    return;
+                }
+
+                if (exchangeFee < 0 || isNaN(exchangeFee)) 
+                {
+                    console.log("Invalid input. Default value set to 0.1%");
+                    exchangeFee = 0.001;
+                }
+
+                if (exchangeFee > 1) { exchangeFee = exchangeFee / 100; }
+                
+                feeAmount = userDeposit * exchangeFee;
+                userDeposit = userDeposit - feeAmount;
+                userCoinBalance = userDeposit / exchangeRate;
+                
                 break;
             }
 
         case 2:
             {
-
+                console.log("=== Crypto Converter (Sell Mode) ===\n");
                 break;
             }
+
         case 3:
+            {   
+                const fmtUsdt = (n) => n.toFixed(2);
+                const fmtCrypto = (n) => parseFloat(n.toFixed(8));
+
+                console.log("=== Crypto Converter (Show Mode) ===\n");
+                console.log("\n=== Exchange Result ===");
+                console.log("Amount in USDT:     ${fmtUsdt(userDeposit)}");
+                console.log("Exchange rate:      ${fmtUsdt(exchangeRate)}");
+                console.log("Fee (${(exchangeFee * 100).toFixed(3)}%):  ${fmtUsdt(feeAmount)} USDT");
+                console.log("You receive:        ${fmtCrypto(userCoinBalance)} crypto");
+                console.log("Net value in USDT:  ${fmtUsdt(amountAfterFee)}");
+                break;
+            }
+
+        case 4:
             {
                 console.log("Exit the program...");
                 process.exit(1);
