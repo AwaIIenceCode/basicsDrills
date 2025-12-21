@@ -61,19 +61,19 @@
 
 const prompt = require("prompt-sync")();
 
-//console.log("=== Crypto Converter (Buy Mode) ===\n");
-const userCommand = Number(prompt("Write \"1\" if you want to buy BTC\nWrite \"2\"if you want to sell cryptocurrency\n"));
-console.log("Write \"3\" for check your balance\nWrite \"4\" for exit the program -> ");
-
 let userDeposit = 0; //депозит юзера
 let BTCRate = 0; //курс крипты
 let exchangeFee = 0; //комиссия биржы
 let userCoinBalance = 0; //к-во монет юзера
 let valueIncomeTax = 0; //налог на прибыль
 let feeAmount = 0; //размер комисии
+let sellValue = 0; //к-во монет для продажы
 
 while(true)
 {
+    const userCommand = Number(prompt("Write \"1\" if you want to buy BTC\nWrite \"2\"if you want to sell cryptocurrency\n"));
+    console.log("Write \"3\" for check your balance\nWrite \"4\" for exit the program -> ");
+
     switch(userCommand)
     {
         case 1:
@@ -86,7 +86,7 @@ while(true)
                 if (userDeposit <= 0 || exchangeRate <= 0) 
                 {
                     console.log("Cannot be 0 or negative!");
-                    return;
+                    process.exit(1);
                 }
 
                 if (exchangeFee < 0 || isNaN(exchangeFee)) 
@@ -101,12 +101,69 @@ while(true)
                 userDeposit = userDeposit - feeAmount;
                 userCoinBalance = userDeposit / exchangeRate;
                 
+                console.log("Congratulation! You are buy BTC!");
+
                 break;
             }
 
         case 2:
             {
-                console.log("=== Crypto Converter (Sell Mode) ===\n");
+                console.log("=== Crypto Converter (Sell Mode) ===\n");      
+
+                sellValue = Number(prompt("Enter the desired sales quantity -> "));
+                
+                if(sellValue > userCoinBalance || sellValue < 0)
+                {
+                    console.log("Can`t be less than the balance!");
+                    process.exit(1);
+                }    
+
+                BTCRate = Number(prompt("Enter your currency sell rate -> "));
+
+                if (BTCRate <= 0) 
+                {
+                    console.log("Cannot be 0 or negative!");
+                    process.exit(1);
+                }
+
+                if(sellValue > userCoinBalance || sellValue < 0)
+                {
+                    console.log("Can`t be less than the balance!");
+                    process.exit(1);
+                }    
+
+                incomeTaxAnswer = prompt("Do I need to calculate income tax? Write \"yes\" or \"no.\" ");
+
+                if (incomeTaxAnswer?.trim().toLowerCase() === "yes") 
+                {
+                    const input = prompt("Enter value your income tax depending on the country -> ");
+                    valueIncomeTax = Number(input);
+    
+                    if (isNaN(valueIncomeTax) || valueIncomeTax < 0) 
+                    {
+                        console.log("Invalid input. Default value set to 12%");
+    
+                        valueIncomeTax = 0.12;
+  
+                    }
+
+                } 
+
+                else if (incomeTaxAnswer?.trim().toLowerCase() === "no") 
+                {
+                    console.log("Calculations will be made without taking tax into account");
+                } 
+
+                else 
+                {
+                    console.log("Invalid input, proceeding without tax");
+                }
+
+                userCoinBalance = userCoinBalance - sellValue;
+                userDeposit = userCoinBalance * BTCRate;
+
+                userDeposit = userDeposit - (userDeposit * valueIncomeTax) 
+
                 break;
             }
 
