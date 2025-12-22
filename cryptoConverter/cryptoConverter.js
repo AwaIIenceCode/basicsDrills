@@ -1,192 +1,137 @@
-// console.log("=== Crypto Converter (Buy Mode) ===\n");
-
-// const userDeposit = Number(prompt("Enter your USDT deposit -> "));
-// const exchangeRate = Number(prompt("Enter your currency rate -> "));
-// let exchangeFee = Number(prompt("Enter your commission exchange in \"%!\"-> "));
-
-// if (userDeposit <= 0 || exchangeRate <= 0) 
-// {
-//   console.log("Cannot be 0 or negative!");
-//   process.exit(1);
-// }
-
-// if (exchangeFee < 0 || isNaN(exchangeFee)) 
-// {
-//   console.log("Invalid input. Default value set to 0.1%");
-//   exchangeFee = 0.001;
-// }
-
-// if (exchangeFee > 1) { exchangeFee = exchangeFee / 100; }
-
-// let valueIncomeTax = 0;
-// const incomeTaxAnswer = prompt("Do I need to calculate income tax? Write \"yes\" or \"no.\" ");
-
-// if (incomeTaxAnswer?.trim().toLowerCase() === "yes") 
-// {
-//   const input = prompt("Enter value your income tax depending on the country -> ");
-//   valueIncomeTax = Number(input);
-
-//   if (isNaN(valueIncomeTax) || valueIncomeTax < 0) {
-//     console.log("Invalid input. Default value set to 12%");
-//     valueIncomeTax = 0.12;
-//   }
-// } 
-
-// else if (incomeTaxAnswer?.trim().toLowerCase() === "no") 
-// {
-//   console.log("Calculations will be made without taking tax into account");
-// } 
-
-// else 
-// {
-//   console.log("Invalid input, proceeding without tax");
-// }
-
-// const feeAmount = userDeposit * exchangeFee;
-// const amountAfterFee = userDeposit - feeAmount;
-// const userCoinBalance = amountAfterFee / exchangeRate;
-
-// const fmtUsdt = (n) => n.toFixed(2);
-// const fmtCrypto = (n) => parseFloat(n.toFixed(8));  
-
-// console.log("\n=== Exchange Result ===");
-// console.log(`Amount in USDT:     ${fmtUsdt(userDeposit)}`);
-// console.log(`Exchange rate:      ${fmtUsdt(exchangeRate)}`);
-// console.log(`Fee (${(exchangeFee * 100).toFixed(3)}%):  ${fmtUsdt(feeAmount)} USDT`);
-// console.log(`You receive:        ${fmtCrypto(userCoinBalance)} crypto`);
-// console.log(`Net value in USDT:  ${fmtUsdt(amountAfterFee)}`);
-
-
-
-
 const prompt = require("prompt-sync")();
 
-let userDeposit = 0; //депозит юзера
-let BTCRate = 0; //курс крипты
-let exchangeFee = 0; //комиссия биржы
-let userCoinBalance = 0; //к-во монет юзера
-let valueIncomeTax = 0; //налог на прибыль
-let feeAmount = 0; //размер комисии
-let sellValue = 0; //к-во монет для продажы
+let usdtBalance = 0;     // стартовый баланс в USDT 
+let cryptoBalance = 0;       // сколько BTC на руках
+let buyRate = 0;             // цена покупки (для расчёта прибыли)
+let costBasis = 0;           // сколько USDT реально потрачено на текущую крипту
+let taxRate = 0;             // налог на прибыль (глобальный, один раз вводится)
 
-while(true)
-{
-    const userCommand = Number(prompt("Write \"1\" if you want to buy BTC\nWrite \"2\"if you want to sell cryptocurrency\n"));
-    console.log("Write \"3\" for check your balance\nWrite \"4\" for exit the program -> ");
+console.log("=== Crypto Trader Console ===\n");
+console.log(`Starting USDT balance: ${usdtBalance.toFixed(2)}`);
 
-    switch(userCommand)
-    {
-        case 1:
-            {
-                console.log("=== Crypto Converter (Buy Mode) ===\n");
-                userDeposit = Number(prompt("Enter your USDT deposit -> "));
-                BTCRate = Number(prompt("Enter your currency rate -> "));
-                exchangeFee = Number(prompt("Enter your commission exchange in \"%!\"-> "));
+while (true) {
+  const input = prompt("\n1 - Buy BTC\n2 - Sell BTC\n3 - Show balance\n4 - Set tax rate\n5 - Exit\nEnter command: ");
+  const command = Number(input);
 
-                if (userDeposit <= 0 || exchangeRate <= 0) 
-                {
-                    console.log("Cannot be 0 or negative!");
-                    process.exit(1);
-                }
+  if (isNaN(command)) {
+    console.log("Invalid command!");
+    continue;
+  }
 
-                if (exchangeFee < 0 || isNaN(exchangeFee)) 
-                {
-                    console.log("Invalid input. Default value set to 0.1%");
-                    exchangeFee = 0.001;
-                }
+  switch (command) {
+    case 1: // BUY
+      {
+        console.log("\n=== Buy Mode ===");
+        const deposit = Number(prompt("Enter USDT amount to spend: "));
+        if (isNaN(deposit) || deposit <= 0) {
+          console.log("Invalid or insufficient amount!");
+          break;
+        }
 
-                if (exchangeFee > 1) { exchangeFee = exchangeFee / 100; }
-                
-                feeAmount = userDeposit * exchangeFee;
-                userDeposit = userDeposit - feeAmount;
-                userCoinBalance = userDeposit / exchangeRate;
-                
-                console.log("Congratulation! You are buy BTC!");
+        buyRate = Number(prompt("Enter current BTC rate: "));
+        if (isNaN(buyRate) || buyRate <= 0) {
+          console.log("Invalid rate!");
+          break;
+        }
 
-                break;
-            }
+        let feePercent = Number(prompt("Enter fee % (Enter for 0.1%): ").trim());
+        if (isNaN(feePercent) || feePercent < 0) feePercent = 0.1;
+        const feeRate = feePercent / 100;
 
-        case 2:
-            {
-                console.log("=== Crypto Converter (Sell Mode) ===\n");      
+        const feeAmount = deposit * feeRate;
+        const amountAfterFee = deposit - feeAmount;
+        const boughtCrypto = amountAfterFee / buyRate;
 
-                sellValue = Number(prompt("Enter the desired sales quantity -> "));
-                
-                if(sellValue > userCoinBalance || sellValue < 0)
-                {
-                    console.log("Can`t be less than the balance!");
-                    process.exit(1);
-                }    
+        // обновляем состояние
+        usdtBalance -= deposit;
+        cryptoBalance += boughtCrypto;
+        costBasis += amountAfterFee;  // сколько реально потрачено на крипту
 
-                BTCRate = Number(prompt("Enter your currency sell rate -> "));
+        console.log(`Bought ${boughtCrypto.toFixed(8)} BTC`);
+        console.log(`Fee: ${feeAmount.toFixed(2)} USDT`);
+      }
+      break;
 
-                if (BTCRate <= 0) 
-                {
-                    console.log("Cannot be 0 or negative!");
-                    process.exit(1);
-                }
+    case 2: // SELL
+      {
+        if (cryptoBalance === 0) {
+          console.log("No crypto to sell!");
+          break;
+        }
 
-                if(sellValue > userCoinBalance || sellValue < 0)
-                {
-                    console.log("Can`t be less than the balance!");
-                    process.exit(1);
-                }    
+        console.log("\n=== Sell Mode ===");
+        const sellCrypto = Number(prompt(`How much BTC to sell (max ${cryptoBalance.toFixed(8)}): `));
+        if (isNaN(sellCrypto) || sellCrypto <= 0 || sellCrypto > cryptoBalance) {
+          console.log("Invalid amount!");
+          break;
+        }
 
-                incomeTaxAnswer = prompt("Do I need to calculate income tax? Write \"yes\" or \"no.\" ");
+        const sellRate = Number(prompt("Enter current sell rate: "));
+        if (isNaN(sellRate) || sellRate <= 0) {
+          console.log("Invalid rate!");
+          break;
+        }
 
-                if (incomeTaxAnswer?.trim().toLowerCase() === "yes") 
-                {
-                    const input = prompt("Enter value your income tax depending on the country -> ");
-                    valueIncomeTax = Number(input);
-    
-                    if (isNaN(valueIncomeTax) || valueIncomeTax < 0) 
-                    {
-                        console.log("Invalid input. Default value set to 12%");
-    
-                        valueIncomeTax = 0.12;
-  
-                    }
+        let feePercent = Number(prompt("Enter sell fee % (Enter for 0.1%): ").trim());
+        if (isNaN(feePercent) || feePercent < 0) feePercent = 0.1;
+        const feeRate = feePercent / 100;
 
-                } 
+        const gross = sellCrypto * sellRate;
+        const feeAmount = gross * feeRate;
+        const netProceeds = gross - feeAmount;
 
-                else if (incomeTaxAnswer?.trim().toLowerCase() === "no") 
-                {
-                    console.log("Calculations will be made without taking tax into account");
-                } 
+        // прибыль от этой продажи
+        const proportion = sellCrypto / cryptoBalance;
+        const soldCostBasis = costBasis * proportion;
+        const profit = netProceeds - soldCostBasis;
 
-                else 
-                {
-                    console.log("Invalid input, proceeding without tax");
-                }
+        const taxAmount = profit > 0 ? profit * taxRate : 0;
+        const finalUsdt = netProceeds - taxAmount;
 
-                userCoinBalance = userCoinBalance - sellValue;
-                userDeposit = userCoinBalance * BTCRate;
+        // обновляем балансы
+        usdtBalance += finalUsdt;
+        cryptoBalance -= sellCrypto;
+        costBasis -= soldCostBasis;
 
-                userDeposit = userDeposit - (userDeposit * valueIncomeTax) 
+        console.log(`Sold ${sellCrypto.toFixed(8)} BTC`);
+        console.log(`Gross: ${gross.toFixed(2)} USDT`);
+        console.log(`Fee: ${feeAmount.toFixed(2)} USDT`);
+        console.log(`Profit: ${profit.toFixed(2)} USDT`);
+        if (taxRate > 0 && profit > 0) {
+          console.log(`Tax (${(taxRate * 100).toFixed(1)}%): ${taxAmount.toFixed(2)} USDT`);
+        }
+        console.log(`Received: ${finalUsdt.toFixed(2)} USDT`);
+      }
+      break;
 
-                break;
-            }
+    case 3: // BALANCE
+      {
+        console.log("\n=== Current Balance ===");
+        console.log(`USDT:      ${usdtBalance.toFixed(2)}`);
+        console.log(`BTC:       ${cryptoBalance.toFixed(8)}`);
+        if (cryptoBalance > 0) {
+          const currentValue = cryptoBalance * buyRate;
+          const totalProfit = currentValue - costBasis;
+          console.log(`Current value: ${currentValue.toFixed(2)} USDT`);
+          console.log(`Unrealized P/L: ${totalProfit.toFixed(2)} USDT`);
+        }
+      }
+      break;
 
-        case 3:
-            {   
-                const fmtUsdt = (n) => n.toFixed(2);
-                const fmtCrypto = (n) => parseFloat(n.toFixed(8));
+    case 4: // SET TAX
+      {
+        const taxInput = prompt("Enter profit tax rate % (Enter for 0%): ").trim();
+        taxRate = taxInput === "" ? 0 : Number(taxInput) / 100;
+        if (isNaN(taxRate) || taxRate < 0) taxRate = 0;
+        console.log(`Tax rate set to ${(taxRate * 100).toFixed(1)}%`);
+      }
+      break;
 
-                console.log("=== Crypto Converter (Show Mode) ===\n");
-                console.log("\n=== Exchange Result ===");
-                console.log("Amount in USDT:     ${fmtUsdt(userDeposit)}");
-                console.log("Exchange rate:      ${fmtUsdt(exchangeRate)}");
-                console.log("Fee (${(exchangeFee * 100).toFixed(3)}%):  ${fmtUsdt(feeAmount)} USDT");
-                console.log("You receive:        ${fmtCrypto(userCoinBalance)} crypto");
-                console.log("Net value in USDT:  ${fmtUsdt(amountAfterFee)}");
-                break;
-            }
+    case 5: // EXIT
+      console.log("Goodbye!");
+      process.exit(0);
 
-        case 4:
-            {
-                console.log("Exit the program...");
-                process.exit(1);
-            }    
-
-    }
+    default:
+      console.log("Unknown command!");
+  }
 }
